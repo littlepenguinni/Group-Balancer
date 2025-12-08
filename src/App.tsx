@@ -194,7 +194,7 @@ export default function TeamBalancer() {
                                 className="flex-1 min-w-[200px] px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                             />
                             <div className="flex items-center gap-2">
-                                <label className="text-sm font-medium text-gray-700">Potential:</label>
+                                <label className="text-sm font-medium text-gray-700">Group:</label>
                                 <input
                                     type="number"
                                     min="1"
@@ -285,7 +285,7 @@ export default function TeamBalancer() {
                         <div className="mb-6">
                             <h2 className="text-2xl font-bold text-gray-800 mb-2">Balanced Groups</h2>
                             <p className="text-gray-600">
-                                Average Potential per Group: <span className="font-semibold text-indigo-600">{avgPotential}</span>
+                                Average Group Score: <span className="font-semibold text-indigo-600">{avgPotential}</span>
                             </p>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
