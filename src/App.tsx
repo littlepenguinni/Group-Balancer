@@ -148,7 +148,7 @@ export default function TeamBalancer() {
                 <div className="bg-white rounded-lg shadow-xl p-8 mb-8">
                     <div className="flex items-center gap-3 mb-6">
                         <Users className="w-8 h-8 text-indigo-600" />
-                        <h1 className="text-3xl font-bold text-gray-800">Team Balancer</h1>
+                        <h1 className="text-3xl font-bold text-gray-800">Relay Team Balancer</h1>
                     </div>
 
                     <div className="bg-gray-50 rounded-lg p-6 mb-6">
