@@ -14,22 +14,6 @@ interface Group {
 
 export default function TeamBalancer() {
     const [people, setPeople] = useState<Person[]>([
-        { id: '1', name: 'Alex', potential: 7 },
-        { id: '2', name: 'Jordan', potential: 6.5 },
-        { id: '3', name: 'Taylor', potential: 5 },
-        { id: '4', name: 'Morgan', potential: 6 },
-        { id: '5', name: 'Casey', potential: 4.5 },
-        { id: '6', name: 'Riley', potential: 5.5 },
-        { id: '7', name: 'Jamie', potential: 3 },
-        { id: '8', name: 'Avery', potential: 7 },
-        { id: '9', name: 'Quinn', potential: 4 },
-        { id: '10', name: 'Drew', potential: 6.5 },
-        { id: '11', name: 'Sam', potential: 5 },
-        { id: '12', name: 'Charlie', potential: 3.5 },
-        { id: '13', name: 'Rowan', potential: 5.5 },
-        { id: '14', name: 'Skylar', potential: 4.5 },
-        { id: '15', name: 'Phoenix', potential: 6 },
-        { id: '16', name: 'River', potential: 5 },
     ]);
     const [name, setName] = useState('');
     const [potential, setPotential] = useState<number | string>(4);
