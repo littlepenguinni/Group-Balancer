@@ -32,14 +32,16 @@ export default function TeamBalancer() {
         { id: '16', name: 'River', potential: 5 },
     ]);
     const [name, setName] = useState('');
-    const [potential, setPotential] = useState(4);
+    const [potential, setPotential] = useState<number | string>(4);
     const [groups, setGroups] = useState<Group[]>([]);
     const [groupSize, setGroupSize] = useState(5);
     const [error, setError] = useState('');
 
     const addPerson = () => {
         if (name.trim()) {
-            setPeople([...people, { id: Date.now().toString(), name: name.trim(), potential }]);
+            const potentialNum = typeof potential === 'string' ? parseFloat(potential) || 4 : potential;
+            const clampedPotential = Math.min(7, Math.max(1, potentialNum));
+            setPeople([...people, { id: Date.now().toString(), name: name.trim(), potential: clampedPotential }]);
             setName('');
             setPotential(4);
             setError('');
@@ -51,65 +53,10 @@ export default function TeamBalancer() {
         setError('');
     };
 
-    const balanceGroups = () => {
-        setError('');
-
-        if (people.length < 3) {
-            setError('Need at least 3 people to create groups');
-            return;
-        }
-
-        // Find the best configuration for odd-numbered groups
-        const bestConfig = findBestGroupConfiguration(people.length, groupSize);
-
-        if (!bestConfig) {
-            setError(`Cannot create odd-numbered groups with ${people.length} people. Try adding or removing people.`);
-            return;
-        }
-
-        // Sort people by potential (descending)
-        const sorted = [...people].sort((a, b) => b.potential - a.potential);
-
-        // Initialize groups based on configuration
-        const newGroups: Group[] = bestConfig.map(() => ({
-            members: [],
-            totalPotential: 0
-        }));
-
-        // Use greedy algorithm: always add next person to group with lowest total
-        sorted.forEach(person => {
-            // Find group with lowest total that still needs members
-            let minIdx = 0;
-            let minTotal = Infinity;
-
-            for (let i = 0; i < newGroups.length; i++) {
-                if (newGroups[i].members.length < bestConfig[i] && newGroups[i].totalPotential < minTotal) {
-                    minTotal = newGroups[i].totalPotential;
-                    minIdx = i;
-                }
-            }
-
-            newGroups[minIdx].members.push(person);
-            newGroups[minIdx].totalPotential += person.potential;
-        });
-
-        // Final verification - allow one even group
-        const evenGroups = newGroups.filter(g => g.members.length % 2 === 0);
-        if (evenGroups.length > 1) {
-            setError('Error: Created too many groups with even numbers.');
-            return;
-        }
-
-        setGroups(newGroups);
-    };
-
-    // Find the best way to split people into odd-numbered groups
     const findBestGroupConfiguration = (totalPeople: number, preferredSize: number): number[] | null => {
-        // First, try to find configurations where ALL groups are odd
         const oddSizes = [3, 5, 7, 9, 11];
         const bestConfigs: number[][] = [];
 
-        // Generate possible configurations
         function findOddConfigurations(remaining: number, currentConfig: number[], minSize: number): void {
             if (remaining === 0) {
                 bestConfigs.push([...currentConfig]);
@@ -118,7 +65,6 @@ export default function TeamBalancer() {
 
             if (remaining < minSize) return;
 
-            // Try each odd size
             for (const size of oddSizes) {
                 if (size <= remaining && size >= minSize) {
                     currentConfig.push(size);
@@ -131,9 +77,6 @@ export default function TeamBalancer() {
         findOddConfigurations(totalPeople, [], 3);
 
         if (bestConfigs.length > 0) {
-            // Score each configuration based on:
-            // 1. Closeness to preferred size
-            // 2. Uniformity of group sizes
             const scored = bestConfigs.map(config => {
                 const avgDiff = config.reduce((sum, size) => sum + Math.abs(size - preferredSize), 0) / config.length;
                 const variance = config.reduce((sum, size) => {
@@ -143,16 +86,13 @@ export default function TeamBalancer() {
                 return { config, score: avgDiff + variance / 10 };
             });
 
-            // Sort by score (lower is better)
             scored.sort((a, b) => a.score - b.score);
 
-            // Return best configuration, sorted by size descending
             const best = scored[0].config;
             best.sort((a, b) => b - a);
             return best;
         }
 
-        // If no all-odd solution exists, allow one even group
         const numGroups = Math.round(totalPeople / preferredSize);
         if (numGroups === 0) return null;
 
@@ -168,6 +108,52 @@ export default function TeamBalancer() {
         return config;
     };
 
+    const balanceGroups = () => {
+        setError('');
+
+        if (people.length < 3) {
+            setError('Need at least 3 people to create groups');
+            return;
+        }
+
+        const bestConfig = findBestGroupConfiguration(people.length, groupSize);
+
+        if (!bestConfig) {
+            setError(`Cannot create odd-numbered groups with ${people.length} people. Try adding or removing people.`);
+            return;
+        }
+
+        const sorted = [...people].sort((a, b) => b.potential - a.potential);
+
+        const newGroups: Group[] = bestConfig.map(() => ({
+            members: [],
+            totalPotential: 0
+        }));
+
+        sorted.forEach(person => {
+            let minIdx = 0;
+            let minTotal = Infinity;
+
+            for (let i = 0; i < newGroups.length; i++) {
+                if (newGroups[i].members.length < bestConfig[i] && newGroups[i].totalPotential < minTotal) {
+                    minTotal = newGroups[i].totalPotential;
+                    minIdx = i;
+                }
+            }
+
+            newGroups[minIdx].members.push(person);
+            newGroups[minIdx].totalPotential += person.potential;
+        });
+
+        const evenGroups = newGroups.filter(g => g.members.length % 2 === 0);
+        if (evenGroups.length > 1) {
+            setError('Error: Created too many groups with even numbers.');
+            return;
+        }
+
+        setGroups(newGroups);
+    };
+
     const avgPotential = groups.length > 0
         ? (groups.reduce((sum, g) => sum + g.totalPotential, 0) / groups.length).toFixed(1)
         : '0';
@@ -181,7 +167,6 @@ export default function TeamBalancer() {
                         <h1 className="text-3xl font-bold text-gray-800">Team Balancer</h1>
                     </div>
 
-                    {/* Add Person Section */}
                     <div className="bg-gray-50 rounded-lg p-6 mb-6">
                         <h2 className="text-xl font-semibold mb-4 text-gray-700">Add Person</h2>
                         <div className="flex flex-wrap gap-4">
@@ -201,7 +186,16 @@ export default function TeamBalancer() {
                                     max="7"
                                     step="0.5"
                                     value={potential}
-                                    onChange={(e) => setPotential(Math.min(7, Math.max(1, Number(e.target.value))))}
+                                    onChange={(e) => setPotential(e.target.value)}
+                                    onBlur={(e) => {
+                                        const val = e.target.value;
+                                        if (val === '' || isNaN(parseFloat(val))) {
+                                            setPotential(4);
+                                        } else {
+                                            const num = parseFloat(val);
+                                            setPotential(Math.min(7, Math.max(1, num)));
+                                        }
+                                    }}
                                     className="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                                 />
                             </div>
@@ -215,7 +209,6 @@ export default function TeamBalancer() {
                         </div>
                     </div>
 
-                    {/* People List */}
                     <div className="mb-6">
                         <h2 className="text-xl font-semibold mb-4 text-gray-700">
                             People ({people.length})
@@ -247,14 +240,12 @@ export default function TeamBalancer() {
                         )}
                     </div>
 
-                    {/* Error Message */}
                     {error && (
                         <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
                             {error}
                         </div>
                     )}
 
-                    {/* Generate Groups */}
                     <div className="flex flex-wrap items-center gap-4 pt-6 border-t border-gray-200">
                         <div className="flex items-center gap-2">
                             <label className="text-sm font-medium text-gray-700">Preferred Group Size:</label>
@@ -279,13 +270,12 @@ export default function TeamBalancer() {
                     </div>
                 </div>
 
-                {/* Groups Display */}
                 {groups.length > 0 && (
                     <div className="bg-white rounded-lg shadow-xl p-8">
                         <div className="mb-6">
                             <h2 className="text-2xl font-bold text-gray-800 mb-2">Balanced Groups</h2>
                             <p className="text-gray-600">
-                                Average Group Score: <span className="font-semibold text-indigo-600">{avgPotential}</span>
+                                Average Group score: <span className="font-semibold text-indigo-600">{avgPotential}</span>
                             </p>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
