@@ -112,30 +112,23 @@ export default function TeamBalancer() {
                             />
                             <div className="flex items-center gap-2">
                                 <label className="text-sm font-medium text-gray-700">Group:</label>
-                                <input
-                                    type="number"
-                                    min="0.5"
-                                    max="7.5"
-                                    step="0.5"
+                                <select
                                     value={potential}
-                                    onChange={(e) => setPotential(e.target.value)}
-                                    onBlur={(e) => {
-                                        const val = e.target.value;
-                                        if (val === '' || isNaN(parseFloat(val))) {
-                                            setPotential(4);
-                                        } else {
-                                            const num = parseFloat(val);
-                                            setPotential(Math.min(7.5, Math.max(0.5, num)));
-                                        }
-                                    }}
+                                    onChange={(e) => setPotential(parseFloat(e.target.value))}
                                     className="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                />
+                                >
+                                    {Array.from({length: 13}, (_, i) => 1 + i * 0.5).map((val) => (
+                                        <option key={val} value={val}>
+                                            {val}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
                             <button
                                 onClick={addPerson}
                                 className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition flex items-center gap-2"
                             >
-                                <Plus className="w-4 h-4" />
+                                <Plus className="w-4 h-4"/>
                                 Add
                             </button>
                         </div>
@@ -146,10 +139,11 @@ export default function TeamBalancer() {
                             People ({people.length})
                         </h2>
                         {people.length === 0 ? (
-                            <p className="text-gray-500 text-center py-8">No people added yet. Add people above to get started.</p>
+                            <p className="text-gray-500 text-center py-8">No people added yet. Add people above to get
+                                started.</p>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                {people.map(person => (
+                            {[...people].sort((a, b) => a.name.localeCompare(b.name)).map(person => (
                                     <div
                                         key={person.id}
                                         className="flex items-center justify-between bg-white border border-gray-200 rounded-lg p-3 hover:shadow-md transition"
